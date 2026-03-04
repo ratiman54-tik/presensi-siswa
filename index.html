@@ -3,65 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presensi Digital Sekolah</title>
+    <title>Presensi Siswa Digital</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f3f4f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: #eee; padding: 5px; border-radius: 12px; }
-        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-radius: 8px; font-weight: 600; color: #667; transition: 0.3s; }
-        .tab.active { background: white; color: #2563eb; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        :root { --blue: #2563eb; --green: #10b981; --red: #ef4444; --slate: #64748b; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .tabs { display: flex; background: #f8fafc; padding: 5px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; font-weight: 600; color: var(--slate); }
+        .tab.active { background: white; color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .panel { display: none; }
         .panel.active { display: block; }
-        h2 { margin: 0 0 10px; font-size: 20px; color: #1f2937; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #e5e7eb; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .btn-blue { background: #2563eb; color: white; }
-        .btn-green { background: #10b981; color: white; }
-        .btn-blue:active, .btn-green:active { transform: scale(0.98); }
-        #statusBox { margin-top: 15px; padding: 12px; border-radius: 10px; font-size: 14px; display: none; text-align: center; }
-        .success { background: #dcfce7; color: #166534; }
-        .error { background: #fee2e2; color: #991b1b; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0 20px; border: 1.5px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; font-size: 15px; }
+        .btn-blue { background: var(--blue); }
+        .btn-green { background: var(--green); }
+        #status { padding: 15px; border-radius: 10px; text-align: center; display: none; margin-top: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div class="tabs">
-        <div id="tab-siswa" class="tab active" onclick="switchTab('siswa')">Siswa</div>
-        <div id="tab-admin" class="tab" onclick="switchTab('admin')">Admin</div>
+        <div id="t-siswa" class="tab active" onclick="switchTab('siswa')">Siswa</div>
+        <div id="t-admin" class="tab" onclick="switchTab('admin')">Admin</div>
     </div>
 
-    <div id="panel-siswa" class="panel active">
-        <h2>Presensi Siswa</h2>
-        <p style="color:#6b7280; font-size: 13px;">Titik: -7.712, 109.5827 (Maks 50m)</p>
-        <input type="number" id="nisn" placeholder="Masukkan NISN Anda">
-        <button class="btn-blue" onclick="mulaiAbsen()">SUBMIT KEHADIRAN</button>
-        <div id="statusBox"></div>
+    <div id="p-siswa" class="panel active">
+        <h2 style="margin-top:0; color:#1e293b">Absensi</h2>
+        <label>NISN</label>
+        <input type="number" id="nisn" placeholder="Masukkan NISN">
+        <label>Status</label>
+        <select id="statusAbsen">
+            <option value="HADIR">Hadir (Di Sekolah)</option>
+            <option value="IZIN">Izin (Berhalangan)</option>
+            <option value="SAKIT">Sakit</option>
+        </select>
+        <button class="btn-blue" onclick="prosesAbsen()" id="btnKirim">KIRIM ABSEN</button>
+        <div id="status"></div>
     </div>
 
-    <div id="panel-admin" class="panel">
-        <h2>Panel Admin</h2>
-        <div id="login-form">
+    <div id="p-admin" class="panel">
+        <h2 style="margin-top:0">Panel Admin</h2>
+        <div id="admin-login">
             <input type="password" id="passAdmin" placeholder="Password Admin">
-            <button class="btn-blue" onclick="loginAdmin()">MASUK</button>
+            <button class="btn-blue" onclick="loginAdmin()">LOGIN</button>
         </div>
         <div id="admin-menu" style="display:none; text-align: center;">
-            <p>Login Berhasil.</p>
+            <p style="color:var(--green)">Login Berhasil</p>
             <button class="btn-green" onclick="unduhRekap()">📥 DOWNLOAD REKAP (XLS)</button>
-            <button style="margin-top:10px; background:none; color:#ef4444;" onclick="location.reload()">Logout</button>
+            <button style="margin-top:15px; background:none; color:var(--red);" onclick="location.reload()">Logout</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SCHOOL = { lat: -7.712, lng: 109.5827, radius: 50 };
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbytCucIXHCu8Qxad3tJASJEfVxerFxLNBcE1cnxRyk5UWY40A8lzfRsbfF4IfQl_T37/exec"; // <--- GANTI INI
+    const CONFIG = {
+        lat: -7.712, lng: 109.5827, radius: 50,
+        url: "https://script.google.com/macros/s/AKfycbwkJpfuHVJhpcv6wHHVMeFJw4DrA2_vayTOtAu8E2cvwbg_f3ryJDoW1-IGXMGPxt2I/exec" // <-- TEMPEL URL DISINI
+    };
 
-    function switchTab(type) {
-        document.querySelectorAll('.tab, .panel').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-' + type).classList.add('active');
-        document.getElementById('panel-' + type).classList.add('active');
+    function switchTab(t) {
+        document.querySelectorAll('.tab, .panel').forEach(e => e.classList.remove('active'));
+        document.getElementById('t-'+t).classList.add('active');
+        document.getElementById('p-'+t).classList.add('active');
     }
 
     function hitungJarak(lat1, lon1, lat2, lon2) {
@@ -72,55 +77,56 @@
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
-    function mulaiAbsen() {
+    function prosesAbsen() {
         const nisn = document.getElementById('nisn').value;
-        const box = document.getElementById('statusBox');
-        if(!nisn) return alert("Masukkan NISN!");
+        const status = document.getElementById('statusAbsen').value;
+        const box = document.getElementById('status');
+        const btn = document.getElementById('btnKirim');
 
+        if(!nisn) return alert("Isi NISN!");
+        btn.disabled = true;
         box.style.display = "block";
-        box.className = "success";
+        box.style.background = "#f1f5f9";
         box.innerHTML = "⏳ Mengecek Lokasi...";
 
         navigator.geolocation.getCurrentPosition(pos => {
-            const jarak = hitungJarak(pos.coords.latitude, pos.coords.longitude, SCHOOL.lat, SCHOOL.lng);
+            const jarak = hitungJarak(pos.coords.latitude, pos.coords.longitude, CONFIG.lat, CONFIG.lng);
             
-            if (jarak > SCHOOL.radius) {
-                box.className = "error";
-                box.innerHTML = `❌ Gagal! Jarak Anda ${jarak.toFixed(1)}m. (Maks 50m)`;
+            if (status === "HADIR" && jarak > CONFIG.radius) {
+                box.style.background = "#fee2e2";
+                box.innerHTML = `❌ Jarak: ${jarak.toFixed(0)}m. Untuk 'Hadir' maksimal 50m.`;
+                btn.disabled = false;
             } else {
-                box.innerHTML = "📡 Mengirim Data...";
-                fetch(WEB_APP_URL, {
+                fetch(CONFIG.url, {
                     method: 'POST',
-                    body: JSON.stringify({ nisn: nisn, jarak: jarak })
+                    body: JSON.stringify({ nisn: nisn, jarak: jarak, status: status })
                 })
-                .then(r => r.text())
-                .then(msg => { box.innerHTML = msg; });
+                .then(r => r.text()).then(msg => {
+                    box.style.background = msg.includes("Gagal") ? "#fee2e2" : "#dcfce7";
+                    box.innerHTML = msg;
+                    btn.disabled = msg.includes("Gagal") ? false : true;
+                });
             }
-        }, () => {
-            box.className = "error";
-            box.innerHTML = "❌ GPS tidak aktif / Izin ditolak.";
+        }, () => { 
+            alert("Aktifkan GPS!"); 
+            btn.disabled = false; 
         }, { enableHighAccuracy: true });
     }
 
     function loginAdmin() {
         if(document.getElementById('passAdmin').value === "admin123") {
-            document.getElementById('login-form').style.display = "none";
+            document.getElementById('admin-login').style.display = "none";
             document.getElementById('admin-menu').style.display = "block";
-        } else {
-            alert("Password Salah!");
-        }
+        } else { alert("Salah!"); }
     }
 
     function unduhRekap() {
-        alert("Sedang mengambil data...");
-        fetch(WEB_APP_URL)
-            .then(res => res.json())
-            .then(json => {
-                const sheet = XLSX.utils.aoa_to_sheet(json);
-                const book = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(book, sheet, "Data Absen");
-                XLSX.writeFile(book, "Rekap_Presensi_Siswa.xlsx");
-            });
+        fetch(CONFIG.url).then(r => r.json()).then(json => {
+            const ws = XLSX.utils.aoa_to_sheet(json);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap_Presensi");
+            XLSX.writeFile(wb, "Data_Absen.xlsx");
+        });
     }
 </script>
 </body>
