@@ -3,67 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presensi Smart Pro</title>
+    <title>Presensi Smart V4</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #2563eb; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; margin: 0; padding: 15px; }
-        .container { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin: auto; }
+        :root { --blue: #2563eb; --green: #10b981; --red: #ef4444; --slate: #64748b; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; margin: 0; padding: 15px; }
+        .card { background: white; max-width: 480px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin: auto; }
         .tabs { display: flex; background: #f8fafc; padding: 5px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; font-weight: 600; color: #64748b; }
-        .tab.active { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; font-weight: 600; color: var(--slate); }
+        .tab.active { background: white; color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .panel { display: none; } .panel.active { display: block; }
         input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
         button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; transition: 0.3s; }
-        .btn-p { background: var(--primary); } .btn-s { background: var(--success); }
-        .admin-box { background: #f8fafc; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #e2e8f0; }
-        canvas { margin: 20px 0; max-height: 200px; }
-        #status { padding: 15px; border-radius: 10px; text-align: center; display: none; margin-top: 15px; }
+        .btn-blue { background: var(--blue); } .btn-green { background: var(--green); }
+        .admin-box { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 15px; }
+        canvas { margin-top: 20px; max-height: 220px; }
+        #msg { padding: 15px; border-radius: 10px; text-align: center; display: none; margin-top: 15px; font-weight: 600; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="card">
     <div class="tabs">
         <div id="t-siswa" class="tab active" onclick="switchTab('siswa')">Siswa</div>
         <div id="t-admin" class="tab" onclick="switchTab('admin')">Admin Panel</div>
     </div>
 
     <div id="p-siswa" class="panel active">
-        <h2 style="margin-top:0">Presensi GPS</h2>
-        <input type="number" id="nisn" placeholder="Masukkan NISN">
+        <h2 style="margin:0; color:#1e293b">Absensi GPS</h2>
+        <input type="number" id="nisn" placeholder="Nomor NISN">
         <select id="stts">
             <option value="HADIR">Hadir (Di Sekolah)</option>
             <option value="IZIN">Izin</option>
             <option value="SAKIT">Sakit</option>
         </select>
-        <button class="btn-p" onclick="absen()">SUBMIT</button>
-        <div id="status"></div>
+        <button class="btn-blue" onclick="prosesAbsen()">KIRIM ABSEN</button>
+        <div id="msg"></div>
     </div>
 
     <div id="p-admin" class="panel">
-        <div id="login">
-            <input type="password" id="pw" placeholder="Password Admin">
-            <button class="btn-p" onclick="login()">MASUK</button>
+        <div id="login-area">
+            <input type="password" id="pass" placeholder="Password Admin">
+            <button class="btn-blue" onclick="login()">LOGIN</button>
         </div>
-        <div id="dash" style="display:none;">
-            <h3 style="margin:0">Dashboard Kehadiran</h3>
-            <canvas id="myChart"></canvas>
+        <div id="dash-area" style="display:none;">
+            <h3 style="margin:0">Statistik Hari Ini</h3>
+            <canvas id="chartPresensi"></canvas>
             <div class="admin-box">
-                <label style="font-size:12px; font-weight:bold;">FILTER & REKAP</label>
-                <input type="text" id="fKelas" placeholder="Filter Kelas (Contoh: 10-A)">
-                <button class="btn-s" onclick="unduh('hari')">📅 Download Harian</button>
-                <button class="btn-s" onclick="unduh('bulan')">📊 Download Bulanan</button>
+                <label style="font-size:12px; font-weight:bold; color:var(--blue)">DOWNLOAD LAPORAN</label>
+                <input type="text" id="fKls" placeholder="Filter Kelas (Kosongkan jika semua)">
+                <button class="btn-green" onclick="unduh('hari')">📅 Rekap Harian</button>
+                <button class="btn-green" onclick="unduh('bulan')">📊 Rekap Bulanan</button>
             </div>
-            <button style="background:none; color:var(--danger); font-size:12px;" onclick="location.reload()">Logout</button>
+            <button style="background:none; color:var(--red); font-size:12px; margin-top:15px;" onclick="location.reload()">Logout</button>
         </div>
     </div>
 </div>
 
 <script>
-    const CFG = { lat: -7.712, lng: 109.5827, rad: 50, url: "https://script.google.com/macros/s/AKfycbxTh98hrl19cjTmwqcmHU7aWNmV6o-MdZbrblOZeRyInANjZsk9rXVfEZAVwEjSoopb/exec" };
-    let raw = []; let myChart;
+    const CONFIG = { lat: -7.712, lng: 109.5827, radius: 50, url: "https://script.google.com/macros/s/AKfycbzAsgMrbmCszvCr9OdnXiB-nz6PCT2h5twDCrvjbwFb6yY4rSnVgXX2AEqj6-obaH3q/exec" };
+    let dataFull = []; let chartObj;
 
     function switchTab(t) {
         document.querySelectorAll('.tab, .panel').forEach(e => e.classList.remove('active'));
@@ -72,74 +72,84 @@
     }
 
     // --- LOGIKA SISWA ---
-    function absen() {
+    function prosesAbsen() {
         const nisn = document.getElementById('nisn').value;
         const st = document.getElementById('stts').value;
-        const b = document.getElementById('status');
-        if(!nisn) return alert("NISN Kosong!");
+        const box = document.getElementById('msg');
+        if(!nisn) return alert("Masukkan NISN!");
 
-        b.style.display = "block"; b.style.background = "#f1f5f9"; b.innerHTML = "⌛ Cek Lokasi...";
+        box.style.display = "block"; box.style.background = "#f1f5f9"; box.innerHTML = "⏳ Mengecek lokasi...";
+
         navigator.geolocation.getCurrentPosition(p => {
-            const d = hitung(p.coords.latitude, p.coords.longitude, CFG.lat, CFG.lng);
-            if(st === "HADIR" && d > CFG.rad) {
-                b.style.background = "#fee2e2"; b.innerHTML = `❌ Gagal! Jarak: ${d.toFixed(0)}m.`;
+            const d = hitungJarak(p.coords.latitude, p.coords.longitude, CONFIG.lat, CONFIG.lng);
+            if(st === "HADIR" && d > CONFIG.radius) {
+                box.style.background = "#fee2e2"; box.innerHTML = `❌ Gagal! Jarak Anda ${d.toFixed(0)}m dari sekolah.`;
             } else {
-                fetch(CFG.url, { method: 'POST', body: JSON.stringify({ nisn, jarak: d, status: st }) })
-                .then(r => r.text()).then(m => { b.style.background = m.includes("Gagal") ? "#fee2e2" : "#dcfce7"; b.innerHTML = m; });
+                fetch(CONFIG.url, { method: 'POST', body: JSON.stringify({ nisn, jarak: d, status: st }) })
+                .then(r => r.text()).then(m => {
+                    box.style.background = m.includes("Gagal") ? "#fee2e2" : "#dcfce7";
+                    box.innerHTML = m;
+                });
             }
         }, () => alert("Aktifkan GPS!"), { enableHighAccuracy: true });
     }
 
-    function hitung(l1, o1, l2, o2) {
-        const R = 6371000; const dL = (l2-l1)*Math.PI/180; const dO = (o2-o1)*Math.PI/180;
-        const a = Math.sin(dL/2)**2 + Math.cos(l1*Math.PI/180)*Math.cos(l2*Math.PI/180)*Math.sin(dO/2)**2;
+    function hitungJarak(lat1, lon1, lat2, lon2) {
+        const R = 6371000; const dLat = (lat2-lat1)*Math.PI/180; const dLon = (lon2-lon1)*Math.PI/180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
     // --- LOGIKA ADMIN ---
     function login() {
-        if(document.getElementById('pw').value === "admin123") {
-            document.getElementById('login').style.display = "none";
-            document.getElementById('dash').style.display = "block";
-            initDash();
-        } else alert("Salah!");
+        if(document.getElementById('pass').value === "admin123") {
+            document.getElementById('login-area').style.display = "none";
+            document.getElementById('dash-area').style.display = "block";
+            tarikData();
+        } else alert("Password Salah!");
     }
 
-    function initDash() {
-        fetch(CFG.url).then(r => r.json()).then(data => {
-            raw = data;
+    function tarikData() {
+        fetch(CONFIG.url).then(r => r.json()).then(data => {
+            dataFull = data;
             const today = new Date().toLocaleDateString('en-CA');
             const s = { HADIR: 0, TERLAMBAT: 0, IZIN: 0, SAKIT: 0 };
             data.slice(1).forEach(r => {
                 if(new Date(r[0]).toLocaleDateString('en-CA') === today) s[r[4]] = (s[r[4]] || 0) + 1;
             });
-            if(myChart) myChart.destroy();
-            myChart = new Chart(document.getElementById('myChart'), {
-                type: 'bar',
+            if(chartObj) chartObj.destroy();
+            chartObj = new Chart(document.getElementById('chartPresensi'), {
+                type: 'doughnut',
                 data: {
                     labels: ['Hadir', 'Terlambat', 'Izin', 'Sakit'],
-                    datasets: [{ label: 'Hari Ini', data: [s.HADIR, s.TERLAMBAT, s.IZIN, s.SAKIT], backgroundColor: ['#10b981','#f59e0b','#3b82f6','#ef4444'] }]
-                },
-                options: { plugins: { legend: { display: false } } }
+                    datasets: [{ data: [s.HADIR, s.TERLAMBAT, s.IZIN, s.SAKIT], backgroundColor: ['#10b981','#f59e0b','#3b82f6','#ef4444'] }]
+                }
             });
         });
     }
 
     function unduh(tipe) {
-        const fk = document.getElementById('fKelas').value.toUpperCase();
+        const filterKelas = document.getElementById('fKls').value.trim().toUpperCase();
         const now = new Date();
-        const res = raw.filter((r, i) => {
-            if(i === 0) return true;
-            const t = new Date(r[0]); const k = r[3]?.toString().toUpperCase() || "";
-            const mK = fk === "" || k.includes(fk);
-            const mW = (tipe === 'hari') ? (t.toLocaleDateString('en-CA') === now.toLocaleDateString('en-CA')) : (t.getMonth() === now.getMonth() && t.getFullYear() === now.getFullYear());
-            return mK && mW;
+        
+        const filtered = dataFull.filter((row, index) => {
+            if(index === 0) return true; // Header
+            const tgl = new Date(row[0]);
+            const kls = row[3] ? row[3].toString().toUpperCase() : ""; // Kolom D
+            
+            const matchKelas = filterKelas === "" || kls.includes(filterKelas);
+            const matchWaktu = (tipe === 'hari') ? 
+                (tgl.toLocaleDateString('en-CA') === now.toLocaleDateString('en-CA')) : 
+                (tgl.getMonth() === now.getMonth() && tgl.getFullYear() === now.getFullYear());
+            
+            return matchKelas && matchWaktu;
         });
-        if(res.length <= 1) return alert("Data Kosong!");
-        const ws = XLSX.utils.aoa_to_sheet(res);
+
+        if(filtered.length <= 1) return alert("Data tidak ditemukan!");
+        const ws = XLSX.utils.aoa_to_sheet(filtered);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Rekap");
-        XLSX.writeFile(wb, `Rekap_${tipe}_${fk || 'Semua'}.xlsx`);
+        XLSX.writeFile(wb, `Rekap_${tipe}_${filterKelas || 'Semua'}.xlsx`);
     }
 </script>
 </body>
